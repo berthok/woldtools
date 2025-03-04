@@ -124,6 +124,51 @@ def parse_headers_from_posts(posts):
     return posts
 
 
+def extract_ac(text):
+    # Extracts the AC from a string. Can be AC9 or AC 9. Can handle 2-digit AC values as well.
+    import re
+
+    match = re.search(r'AC\s*(\d+)', text)
+    return int(match.group(1)) if match else None
+
+
+def extract_hp(text):
+    # Extracts HP as "HP 12/14" or "HP12/14" or "HP 12/14/3" as (current, max, temp)
+    import re
+
+    match = re.search(r'HP\s*(\d+)/(\d+)(?:/(\d+))?', text)
+    if match:
+        current_hp = int(match.group(1))
+        max_hp = int(match.group(2))
+        temp_hp = int(match.group(3)) if match.group(3) else 0
+        return current_hp, max_hp, temp_hp
+    return None
+
+
+def extract_passive_perception(text):
+    # Extracts PP as "PP9" or "PP9" or "PP13" or "PP 13"
+    import re
+
+    match = re.search(r'PP\s*(\d+)', text)
+    if match:
+        return int(match.group(1))
+    return None
+
+
+def extract_conditions(text):
+    # Extracts conditions and returns them in a list
+    from objects import conditions
+
+    result = []
+
+    conditions_list = conditions.keys()
+    for c in conditions_list:
+        if str(c).lower() in str(text).lower():
+            result.append({c: conditions.get(c)})
+
+    return result
+
+
 def extract_links(html):
     import re
 
@@ -188,8 +233,15 @@ def parse_header_information(posts):
             post['character_name'] = replace_smart_quotes(post.get('character_name'))
 
         # Extract Armor Class
+        post['ac'] = extract_ac(post.get('raw_header'))
+    
         # Extract Hit Points
+        post['hp'] = extract_hp(post.get('raw_header'))
+    
         # Extract Passive Perception
+        post['pp'] = extract_passive_perception(post.get('raw_header'))
+
         # Extract Conditions
+        post['conditions'] = extract_conditions(post.get('raw_header'))
 
     return posts
