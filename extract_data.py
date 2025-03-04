@@ -1,5 +1,6 @@
 from functions import fetch_career_games, fetch_career_game_data
 from functions import isolate_posts_from_raw_data, parse_headers_from_posts
+from functions import clean_posts
 from functions import parse_header_information, extract_and_parse_datetime
 from functions import export_data_to_file
 import colorama
@@ -22,6 +23,10 @@ def main():
         print('       - Isolating Posts from Raw Data...')
         game['posts'] = isolate_posts_from_raw_data(game.get('raw_data'))
         print(f'          - Found {Fore.GREEN}{len(game.get("posts"))}{Fore.RESET} Posts')
+
+        print('       - Cleaning Posts...')
+        game['posts'] = clean_posts(game.get('posts'))
+        print('          - Done')
 
         print('       - Parsing Post Datetimes...')
         for post in game.get('posts'):

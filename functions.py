@@ -124,6 +124,43 @@ def parse_headers_from_posts(posts):
     return posts
 
 
+def clean_posts(posts):
+    # Iterates through posts and cleans up each post for display
+    
+    for post in posts:
+        clean_post = post.get('raw_post')
+        # Remove leading and trailing white space
+        clean_post = clean_post.strip()
+        # Replace <big> tag with a div of class "post_header"
+        clean_post = clean_post.replace('<big>', '<div class=\"post_header\">')
+        clean_post = clean_post.replace('</big>', '</div class=\"post_header\">')
+        clean_post = clean_post.replace('<div class=\"post_header\"><b>', '<div class=\"post_header\">')
+        clean_post = clean_post.replace('</b></div class=\"post_header\">', '</div class=\"post_header\">')
+        # Replace formatting around post datetiem with a div of class "post_datetime"
+        clean_post = clean_post.replace('<font size=\"-1\"><br>', '<div class=\"post_datetime\">')
+        clean_post = clean_post.replace('</font><br>', '</div class=\"post_datetime\">')
+        # Replace &nbsp; characters
+        clean_post = clean_post.replace('&nbsp;', '')
+        # Remove the trailing div of class "hrThin"
+        clean_post = clean_post.replace('<br><br><div class=\"hrThin\"></div>', '')
+        # Replace single and double quote characters
+        clean_post = replace_smart_quotes(clean_post)
+        # Mark quotes with a div of class "dialog"
+        clean_post = clean_post.replace('<b>\"', '<div class=\"dialog\">\"')
+        clean_post = clean_post.replace('\"</b>', '\"</div class=\"dialog\">')
+        # Remove trailing line break
+        if clean_post.endswith('<br>'):
+            clean_post = clean_post[:-4]
+        # Wrap post contents (non-header) in div of class "post_contents"
+        clean_post = clean_post.replace('</div class=\"post_datetime\">\n','</div class=\"post_datetime\"><div class=\"post_contents\">')
+        clean_post = clean_post + '</div class=\"post_contents\">'
+
+        # Apply changes
+        post['clean_post'] = clean_post
+
+    return posts
+
+
 def extract_ac(text):
     # Extracts the AC from a string. Can be AC9 or AC 9. Can handle 2-digit AC values as well.
     import re
