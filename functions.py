@@ -36,6 +36,33 @@ def replace_smart_quotes(text):
     return re.sub("|".join(re.escape(k) for k in replacements), lambda m: replacements[m.group()], text)
 
 
+def extract_game_icon_url(text, keyword):
+    import re
+    """
+    Extracts a URL from the given text that contains both 'Game Icon' and the specified keyword.
+    
+    Args:
+        text (str): The input string containing one or more URLs.
+        keyword (str): The keyword that must be present in the URL.
+        
+    Returns:
+        str or None: The extracted URL, or None if not found.
+    """
+    # Regular expression to match URLs
+    url_pattern = r'https?://\S+'  # Matches URLs starting with http or https
+
+    # Find all URLs in the text
+    urls = re.findall(url_pattern, text)
+
+    # Filter URLs that contain both "Game Icon" and the keyword
+    for url in urls:
+        #print(url)
+        if "Game_Icon" in url and keyword in str(url).lower():
+            return url
+
+    return None
+
+
 def fetch_career_games():
     # Gather info about all current career games in the Wold
     import requests
@@ -73,10 +100,13 @@ def fetch_career_games():
                         game_id = match[0].split('=')[1]
                         game_name = match[1]
                         game_url = match[0]
+                        game_icon = extract_game_icon_url(response.text, game_id)
+                        game_icon = game_icon.replace('\"','')
 
                         result.append({"game_id": game_id,
                                        "game_name": game_name,
-                                       "game_url": game_url})
+                                       "game_url": game_url,
+                                       "game_icon": game_icon})
 
         return result
     else:
@@ -126,7 +156,7 @@ def parse_headers_from_posts(posts):
 
 def clean_posts(posts):
     # Iterates through posts and cleans up each post for display
-    
+
     for post in posts:
         clean_post = post.get('raw_post')
         # Remove leading and trailing white space
@@ -148,12 +178,26 @@ def clean_posts(posts):
         # Mark quotes with a div of class "dialog"
         clean_post = clean_post.replace('<b>\"', '<div class=\"dialog\">\"')
         clean_post = clean_post.replace('\"</b>', '\"</div class=\"dialog\">')
+        # Count all number of open dialog divs
+        # Count all number of close dialog divs
+        # If the number of close divs are lower than the open divs...
+        # Split up the string based on open divs...
+        # Starting with element [1], look for close divs
+        # If a close div is missing, look for a [/b] tag and add it afterwards
+        # If a close div is missing, look for a " and add it afterwards
+        # If neither of those is present and it is the last element, add the close div at the end of the string
+
+
+        # If the number of open divs are lower than the close divs...
+
         # Remove trailing line break
         if clean_post.endswith('<br>'):
             clean_post = clean_post[:-4]
         # Wrap post contents (non-header) in div of class "post_contents"
         clean_post = clean_post.replace('</div class=\"post_datetime\">\n','</div class=\"post_datetime\"><div class=\"post_contents\">')
         clean_post = clean_post + '</div class=\"post_contents\">'
+
+        #! Need to do a count of each dialog div and tag to make sure every open tag is closed.
 
         # Apply changes
         post['clean_post'] = clean_post
@@ -271,10 +315,10 @@ def parse_header_information(posts):
 
         # Extract Armor Class
         post['ac'] = extract_ac(post.get('raw_header'))
-    
+
         # Extract Hit Points
         post['hp'] = extract_hp(post.get('raw_header'))
-    
+
         # Extract Passive Perception
         post['pp'] = extract_passive_perception(post.get('raw_header'))
 
