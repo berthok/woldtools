@@ -111,7 +111,7 @@
         {% for post in game.posts|reverse %}
         {% if post.dm_post == 1 %}<div class="dm-post">{% else %}<div class="post">{% endif %}
             <div class="post-header">
-                <img class="profile-photo" src="profiles/{{ post.character_name }}.png" alt="{{ post.character_name }}" onerror="this.onerror=null; this.src='profiles/default.png';">
+                <img class="profile-photo" src="profiles/{{game.game_id}}/{{ post.character_name }}.png" alt="{{ post.character_name }}" onerror="this.onerror=null; this.src='profiles/default.png';">
                 <div class="author-info">
                     <h3>{% if post.dm_post == 1 %}
                             {% if post.dm|length == 1 %}DM - {{ post.dm[0] }}
