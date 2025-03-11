@@ -137,6 +137,8 @@ def isolate_posts_from_raw_data(raw_data):
         if '<head>' not in data:
             post_counter = post_counter + 1
             raw_post = data.split(post_end)[0]
+            if '<!-- E' in raw_post:
+                raw_post = raw_post.split('<!-- E')[0]
             posts.append({"post_id": post_counter,
                         "raw_post": raw_post})
 
