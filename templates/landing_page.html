@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DarkWold - Enter your Wold...</title>
+    <style>
+        body {
+            font-family: Verdana, sans-serif;
+            text-align: center;
+            background-color:rgb(18, 18, 18);
+            color:rgb(93, 91, 91);
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color:rgb(18, 18, 18);
+            padding: 20px 0;
+            z-index: 1000;
+        }
+        .header h1, .header h2 {
+            margin: 0;
+        }
+        .header h1 {
+            color:rgba(177, 0, 0, 0.5);
+        }
+        .header h2 {
+            color: rgb(85, 86, 51);
+        }
+        .content {
+            margin-top: 100px;
+            padding-bottom: 20px;
+        }
+        .link-container {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .image-container {
+            position: relative;
+            display: inline-block;
+        }
+        .link-item {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            margin: 10px 0;
+            border-radius: 10px;
+            display: block;
+            opacity: 0.7; /* Makes the image slightly transparent */
+        }
+        .link-item:hover {
+            opacity: 1;
+        }
+        .image-container::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(0, 0, 0, 0) 30%, rgba(0, 0, 0, 0.9) 90%);
+            transition: background 0.3s ease;
+            border-radius: 10px;
+            pointer-events: none;
+        }
+        .image-container:hover::after {
+            background: rgba(139, 0, 0, 0.5); /* Dark red overlay */
+        }
+
+        /* Bottom Pop-Up Panel */
+        .info-panel {
+            position: fixed;
+            bottom: -300px; /* Initially hidden below the screen */
+            left: 0;
+            width: 100%;
+            height: 300px;
+            background-color: #1a1a1a;
+            color: rgb(154, 152, 152);
+            padding: 20px;
+            box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.3);
+            transition: bottom 0.3s ease-in-out;
+            z-index: 1001; /* Ensure it's above other elements */
+        }
+        
+        .info-panel h2 {
+            color: rgb(204, 202, 202);
+        }
+
+        .info-panel a {
+            color: rgb(125, 164, 212);
+        }
+
+        /* Open state (when button is clicked) */
+        .info-panel.open {
+            bottom: 0; /* Moves the panel into view */
+        }
+
+        /* Floating Info Button */
+        .info-button {
+            position: fixed;
+            top: 20px;
+            right: 20px; /* Keep it inside the screen */
+            background-color: rgba(177, 0, 0, 0.5); /* Dark red */
+            color: rgb(153, 153, 153);
+            border: none;
+            border-radius: 20px; /* Rounded edges */
+            padding: 10px 15px; /* Ensure full coverage */
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            max-width: calc(100% - 40px); /* Prevents overflow */
+            white-space: nowrap; /* Keep text on one line */
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: background 0.3s ease, transform 0.2s ease;
+            overflow: hidden; /* Prevents text from spilling out */
+            z-index: 1002;
+        }
+
+        .info-button:hover {
+            background-color:rgb(85, 86, 51);
+            transform: scale(1.1);
+            color: white;
+        }
+
+        /* Close Button */
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .close-button:hover {
+            color: #ffcc00;
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Info Button -->
+    <button class="info-button" onclick="togglePanel()">What is DarkWold?</button>
+
+    <!-- Info Panel -->
+    <div class="info-panel" id="infoPanel">
+        <button class="close-button" onclick="togglePanel()">×</button>
+        <h2>What is the Dark Wold?</h2>
+        <p>It is not an evil opposition to the Wold, but a companion to it. Full of creature comforts for those of us with aging eyes.</p>
+        <p>If you are looking for tools and tricks to keep up-to-speed with your Woldian storytelling, this is your home.</p>
+        <h2>What is the Wold?</h2>
+        <p>You mean you are here and don't know of the Wold? Get ye back to <a href="https://www.woldiangames.com/" target="_blank">the nicest play-by-post community on the Internet.</a></p>
+    </div>
+
+    <script>
+        function togglePanel() {
+            const panel = document.getElementById("infoPanel");
+            panel.classList.toggle("open");
+        }
+    </script>
+    <!-- Site Begins -->
+    <div class="header">
+        <h1>Welcome to the DarkWold</h1>
+        <h2>Dark Choose a Dark Game to Dark View...</h2>
+    </div>
+    
+    <div class="content">
+        <div class="link-container">
+            {% for link in links %}
+            <!-- {{ link.game_id }} -->
+            <a href="{{ link.darkwold_url }}" target="_blank">
+                <img class="link-item" src="{{ link.game_icon }}" alt="{{ link.game_name }}">
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
