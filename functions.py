@@ -177,20 +177,54 @@ def clean_posts(posts):
         clean_post = clean_post.replace('<br><br><div class=\"hrThin\"></div>', '')
         # Replace single and double quote characters
         clean_post = replace_smart_quotes(clean_post)
+
+        '''
         # Mark quotes with a div of class "dialog"
         clean_post = clean_post.replace('<b>\"', '<div class=\"dialog\">\"')
         clean_post = clean_post.replace('\"</b>', '\"</div class=\"dialog\">')
+
+        #! Discover if there are dialog divs left open and attempt to close them.
         # Count all number of open dialog divs
+        open_diag_count = clean_post.count('<div class=\"dialog\">\"')
         # Count all number of close dialog divs
+        close_diag_count = clean_post.count('\"</div class=\"dialog\">')
         # If the number of close divs are lower than the open divs...
-        # Split up the string based on open divs...
-        # Starting with element [1], look for close divs
-        # If a close div is missing, look for a [/b] tag and add it afterwards
-        # If a close div is missing, look for a " and add it afterwards
-        # If neither of those is present and it is the last element, add the close div at the end of the string
+        if close_diag_count < open_diag_count:
+            # Split up the string based on open divs...
+            split_post = clean_post.split('<div class=\"dialog\">\"')
+            # Starting with element [1], look for close divs
+            for fragment in split_post:
+                if '</div class=\"dialog\">' not in fragment:
+                    # If a close div is missing, look for a [/b] tag and add it afterwards
+                    if '[/b]' in fragment:
+                        fragment = fragment.replace('[/b]','[/b]</div class=\"dialog\">')
+                    # If a close div is missing, look for a " and add it afterwards
+                    elif '"' in fragment:
+                        fragment = fragment.replace('"','\"</div class=\"dialog\">')
+                    # If neither of those is present and it is the last element, add the close div at the end of the string
+                    else:
+                        fragment = fragment + '</div class=\"dialog\">'
+            clean_post = '<div class=\"dialog\">\"'.join(map(str, split_post))
 
-
+        #! Discover if there are dialog divs closed but not opened and open them.
         # If the number of open divs are lower than the close divs...
+        if close_diag_count > open_diag_count:
+            # Split up the string based on close divs...
+            split_post = clean_post.split('\"</div class=\"dialog\">')
+            # Starting with element [1], look for open divs
+            for fragment in split_post:
+                if '<div class=\"dialog\">' not in fragment:
+                    # If an open div is missing, look for a [b] tag and add it before
+                    if '[b]' in fragment:
+                        fragment = fragment.replace('[b]','<div class=\"dialog\">[b]')
+                    # If an open div is missing, look for a " and add it before
+                    elif '"' in fragment:
+                        fragment = fragment.replace('"','<div class=\"dialog\">\"')
+                    # If neither of those is present and it is the last element, add the open div at the beginning of the string
+                    else:
+                        fragment = fragment + '<div class=\"dialog\">'
+            clean_post = '\"</div class=\"dialog\">'.join(map(str, split_post))
+        '''
 
         # Remove trailing line break
         if clean_post.endswith('<br>'):
@@ -199,12 +233,29 @@ def clean_posts(posts):
         clean_post = clean_post.replace('</div class=\"post_datetime\">\n','</div class=\"post_datetime\"><div class=\"post_contents\">')
         clean_post = clean_post + '</div class=\"post_contents\">'
 
-        #! Need to do a count of each dialog div and tag to make sure every open tag is closed.
-
         # Apply changes
         post['clean_post'] = clean_post
+        post['clean_post_contents'] = '<div class=\"post_contents\">' + clean_post.split('<div class=\"post_contents\">')[1]
 
     return posts
+
+
+def extract_dice_rolls(roll_string):
+    import re
+    # Regular expression pattern to match dice rolls
+    pattern = r'(\d*d\d+([+-]\d+)?=\d+|\d*d\d+([+-]\d+)?)'
+    
+    # Find all matches using re.findall()
+    matches = re.findall(pattern, roll_string)
+    rolls = []
+    for match in matches:
+        if str(match[0]).startswith('d'):
+            rolls.append('1' + str(match[0]))
+        else:
+            rolls.append(str(match[0]))
+
+    # Return the matched rolls
+    return rolls
 
 
 def extract_ac(text):
@@ -326,5 +377,8 @@ def parse_header_information(posts):
 
         # Extract Conditions
         post['conditions'] = extract_conditions(post.get('raw_header'))
+
+        # Extract Dice Rolls
+        post['dice_rolls'] = extract_dice_rolls(post.get('clean_post').split('</div class=\"post_datetime\">')[0])
 
     return posts
