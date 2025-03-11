@@ -26,7 +26,7 @@
         }
         
         .container {
-            max-width: 1000px;
+            max-width: 800px;
             position: relative; /* To position child elements relative to the container */
             margin: 0 auto;
             padding: 20px;
@@ -70,6 +70,7 @@
 
         .post-header a {
             color: rgb(125, 164, 212);
+            text-decoration: none;
         }
         
         .profile-photo {
@@ -111,7 +112,7 @@
         {% for post in game.posts|reverse %}
         {% if post.dm_post == 1 %}<div class="dm-post">{% else %}<div class="post">{% endif %}
             <div class="post-header">
-                <img class="profile-photo" src="profiles/{{game.game_id}}/{{ post.character_name }}.png" alt="{{ post.character_name }}" onerror="this.onerror=null; this.src='profiles/default.png';">
+                <img class="profile-photo" src="profiles/{{game.game_id | replace(' ', '%20')}}/{{ post.character_name }}.png" alt="{{ post.character_name }}" onerror="this.onerror=null; this.src='profiles/default.png';">
                 <div class="author-info">
                     <h3>{% if post.dm_post == 1 %}
                             {% if post.dm|length == 1 %}DM - {{ post.dm[0] }}
