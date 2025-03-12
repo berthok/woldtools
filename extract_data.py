@@ -42,13 +42,28 @@ def main():
         game['posts'] = parse_header_information(game['posts'])
 
         # Generate list of characters
-        game['characters'] = []
+        game['characters'] = {}
         for post in game.get('posts'):
             if post.get('character_name'):
-                game['characters'].append(post.get('character_name'))
-        game['characters'] = list(set(game.get('characters')))
+                if post.get('character_name') != 'DM':
+                    if len(post.get('header_urls')) > 0:
+                        game['characters'][post.get('character_name')] = {'name': post.get('character_name'),
+                                                                          'url': post.get('header_urls')[0].get('url'),
+                                                                          'hp': post.get('hp'),
+                                                                          'ac': post.get('ac'),
+                                                                          'pp': post.get('pp')}
+                    else:
+                        game['characters'][post.get('character_name')] = {'name': post.get('character_name'),
+                                                                          'url': None,
+                                                                          'hp': post.get('hp'),
+                                                                          'ac': post.get('ac'),
+                                                                          'pp': post.get('pp')}
+        #game['characters'] = sorted(list(set(game.get('characters'))))
+        #game.get('characters').remove('DM')
+        game['characters'] = dict(sorted(game.get('characters').items()))
+
         print('          - Found these characters...')
-        for character in sorted(game.get('characters')):
+        for character in game.get('characters'):
             print(f'             - {character}')
 
     print('Exporting Data to JSON...')
