@@ -325,9 +325,10 @@ def find_dms(text):
 
 def export_data_to_file(data):
     # Write dictionary to a JSON file
+    import os
     import json
-
-    with open("wold_career_games.json", "w", encoding="utf-8") as json_file:
+    json_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),"wold_career_games.json")
+    with open(json_file, "w", encoding="utf-8") as json_file:
         json.dump(data, json_file, indent=4, default=str)  # indent=4 makes it more readable
 
 
@@ -382,3 +383,29 @@ def parse_header_information(posts):
         post['dice_rolls'] = extract_dice_rolls(post.get('clean_post').split('</div class=\"post_datetime\">')[0])
 
     return posts
+
+
+def upload_file_ftps(host, port, username, password, local_file, remote_path):
+    from ftplib import FTP_TLS
+    try:
+        # Connect to the FTPS server
+        ftps = FTP_TLS()
+        ftps.connect(host, port)
+        ftps.login(username, password)
+        ftps.prot_p()  # Switch to secure data connection (explicit FTPS)
+
+        # Open the file and upload it
+        with open(local_file, "rb") as file:
+            content = file.read().decode("utf-8", errors="replace")
+        with open("your_file_fixed.html", "w", encoding="utf-8") as file:
+            file.write(content)
+        with open(local_file, "rb") as file:
+            ftps.storbinary(f"STOR {remote_path}", file)
+
+        print(f"File '{local_file}' uploaded successfully to '{remote_path}'")
+
+        # Close the connection
+        ftps.quit()
+
+    except Exception as e:
+        print(f"Error: {e}")
