@@ -204,10 +204,72 @@
             font-weight: bold;
             font-style: italic;
         }
+
+        /* Panel container */
+        #side-panel {
+            position: fixed;
+            top: 0;
+            right: -400px; /* Start hidden off-screen */
+            width: 400px;
+            height: 100vh;
+            background-color: #222;
+            box-shadow: -5px 0 10px rgba(0, 0, 0, 0.3);
+            transition: right 0.4s ease-in-out;
+            z-index: 1000;
+            border-left: 2px solid #444;
+        }
+
+        /* Panel open state */
+        #side-panel.open {
+            right: 0;
+        }
+
+        /* Close button */
+        #close-btn {
+            position: absolute;
+            top: 15px;
+            left: 10px;
+            background-color: #555;
+            color: #ddd;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            z-index: 1001;
+        }
+
+        #close-btn:hover {
+            background-color: #777;
+        }
+
+        /* Button to open the panel */
+        #open-panel-btn {
+            position: fixed;
+            top: 15px;
+            right: 10px;
+            background-color: #555;
+            color: #ddd;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            z-index: 999;
+        }
+
+        #open-panel-btn:hover {
+            background-color: #777;
+        }
+
+        /* iFrame styling */
+        #panel-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
     </style>
 </head>
 <body>
-    <!-- Sidebar -->
+    <!-- Left Sidebar -->
     <div id="sidebar" class="sidebar">
         <h2>Dramatis Personae</h2>
         <ul>
@@ -227,6 +289,15 @@
 
     <!-- Toggle Button -->
     <button id="toggle-sidebar" class="toggle-button">☰</button>
+
+    <!-- Button to open the right side panel -->
+    <button id="open-panel-btn" onclick="togglePanel()">Post Preview</button>
+
+    <!-- Right Side Panel -->
+    <div id="side-panel">
+        <button id="close-btn" onclick="togglePanel()">Close</button>
+        <iframe id="panel-iframe" src="..\game_post_preview.html"></iframe>
+    </div>
 
     <h1>DarkWold - {{ game.game_name }}</h1>
     <h4><a href="{{ game.game_url }}" target="_blank">Return to the Wold to Post</a></h4>
@@ -291,10 +362,14 @@
                 });
             });
         });
+        function togglePanel() {
+            let panel = document.getElementById("side-panel");
+            panel.classList.toggle("open");
+        };
         // Set auto-reload of site
-        setTimeout(function() {
+        /*setTimeout(function() {
             window.location.href = window.location.pathname + "?nocache=" + new Date().getTime();
-        }, 600000); // 10 minutes
+        }, 600000);*/ // 10 minutes
 </script>
 </body>
 </html>
