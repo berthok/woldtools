@@ -8,5 +8,7 @@ When you post in the Wold you aren't given any way to preview your formatting ch
 * Insert some custom tags like **Dialog** and **OOC**
 * Create your character 'Post Name' in proper format through some prompts with the **Post Name** button.
 
-## extract_data
-This program will download career game data from all active games in the Wold. It will format them into a json structure and output the data to your filesystem.
+## generate_html.py
+This program will download career game data from all active games in the Wold. It will format them into a json structure and output the data to your filesystem. Then it will build several websites in html using jinja and the json data.
+* landing_pages.html
+* game/game_id.html
