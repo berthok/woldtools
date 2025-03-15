@@ -32,15 +32,8 @@
             padding: 20px;
         }
 
-        .top-right-corner {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background-color:rgb(64, 64, 64); /* Change as needed */
+        .post-datetime {
             color: rgb(112, 112, 112);
-            padding: 5px;
-            border-radius: 5px;
-            font-size: 11px;
             font-style: italic;
         }
 
@@ -201,6 +194,16 @@
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
+
+        .nat-20 {
+            color: rgb(188, 121, 121)
+        }
+
+        .character-mention {
+            color: rgb(228, 186, 94);
+            font-weight: bold;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -218,7 +221,7 @@
         </ul>
         <h2>Last Update</h2>
         <ul>
-            <li>{{ game.most_recent_post_datetime }}</li>
+            <li>{{ game.page_generation_datetime }}</li>
         </ul>
     </div>
 
@@ -254,13 +257,10 @@
                 </div>
             </div>
             <button class="toggle-details">▼</button>
-            <div class="original-post-header hidden">Original Header: {{ post.raw_header }}</div>
+            <div class="original-post-header hidden">{{ post.clean_post_header }}</div>
             <div style="height: 2px; background-color: #000; margin: 10px 0;"></div>
             <div class="post-content">
                 <p>{{ post.clean_post_contents }}</p>
-            </div>
-            <div class="top-right-corner">
-                {{ post.post_datetime }}
             </div>
         </div>
         {% endfor %}

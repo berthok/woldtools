@@ -1,99 +1,48 @@
-def create_landing_page(links):
-    # Create wold selection landing page
-    from jinja2 import Environment, FileSystemLoader
-    import os
-
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    template_dir = os.path.join(script_dir, 'templates')
-    # Load the template
-    env = Environment(loader=FileSystemLoader(template_dir))
-    template = env.get_template('landing_page.html')
-
-    # Render the template
-    output_html = template.render(links=links)
-
-    # Save the output into file
-    with open(os.path.join(script_dir,'landing_page.html'), 'w', encoding='utf-8') as f:
-        f.write(output_html)
-
-    return None
-
-
-def create_game_page(game):
-    # Create the html for a dark wold game page.
-    from jinja2 import Environment, FileSystemLoader
-    import os
-    
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    template_dir = os.path.join(script_dir, 'templates')
-    games_dir = os.path.join(script_dir, 'game')
-    # Load the template
-    env = Environment(loader=FileSystemLoader(template_dir))
-    template = env.get_template('game.html')
-
-    # Render the template
-    output_html = template.render(game=game)
-
-    # Save the output into file
-    #json_file = os.path.join(games_dir, f'{d.get("game_id")}.html')
-    with open(game.get('darkwold_file_path'), 'w', encoding='utf-8') as f:
-        f.write(output_html)
-
-    return None
-
-
 def main():
     import os
-    import extract_data
-    extract_data.main()
     import json
+    from functions import build_wold_json_file
+    from functions import create_landing_page, create_game_page
     from functions import upload_file_ftps
-    # Import the data
+
+    # Extract data from the web into a JSON file
+    build_wold_json_file()
+
+    # Import the JSON file data
     json_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),'wold_career_games.json')
     with open(json_file, 'r') as file:
-        data = json.load(file)
+        games = json.load(file)
 
-    links = []
-    games_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),'game')
-    for d in data:
-        d['darkwold_url'] = f'game/{d.get("game_id")}.html'
-        d['darkwold_file_path'] = os.path.join(games_dir, f'{d.get("game_id")}.html')
-        
-        links.append({'game_id': d.get('game_id'),
-                    'game_name': d.get('game_name'),
-                    'game_url': d.get('game_url'),
-                    'game_icon': d.get('game_icon'),
-                    'darkwold_url': d.get('darkwold_url'),
-                    'darkwold_file_path': d.get('darkwold_file_path')})
     # Create landing page
-    create_landing_page(links)
+    create_landing_page(games)
 
     # Create game pages
-    for game in data:
+    for game in games:
         create_game_page(game)
 
-    # Create list of files to upload to FTP
+    # Create list of files to upload to FTP (local file, remote file)
     files = []
     files.append(('landing_page.html', '/darkwold/landing_page.html'))
-    for link in links:
-        files.append((link.get('darkwold_file_path'), '/darkwold/game/' + link.get('game_id') + '.html'))
-        
-    #for file in files:
-    #    print(file)
-        
+    for game in games:
+        files.append((game.get('darkwold_file_path'), f'/darkwold/{game.get("game_id")}.html'))
+
+    # Load FTP Configuration
     ftp_ini = os.path.join(os.path.dirname(os.path.abspath(__file__)),'ftp_settings.ini')
-    import configparser
-    config = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
-    config.read(ftp_ini)
-    ftp_user = config['settings']['user']
-    ftp_password = config['settings']['pass']
-    ftp_server = config['settings']['host']
-    ftp_server_port = config['settings']['port']
-    
-    for f, d in files:
-        print (f)
-        print (d)
-        upload_file_ftps(ftp_server, int(ftp_server_port), ftp_user, ftp_password, f, d)
+    if os.path.exists(ftp_ini) == False:
+        print('FTP settings file not found. Please create a file named "ftp_settings.ini" in the same directory as this script.')
+    else:
+        import configparser
+        config = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
+        config.read(ftp_ini)
+        ftp_user = config['settings']['user']
+        ftp_password = config['settings']['pass']
+        ftp_server = config['settings']['host']
+        ftp_server_port = config['settings']['port']
+        
+        # Upload files to FTP
+        for input_file, output_file in files:
+            print(f'Uploading {input_file} to {output_file}')
+            upload_file_ftps(ftp_server, int(ftp_server_port), ftp_user, ftp_password, input_file, output_file)
 
 
 if __name__ == '__main__':

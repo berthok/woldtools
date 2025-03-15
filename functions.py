@@ -1,5 +1,3 @@
-WOLD_URL = "https://www.woldiangames.com/games_index_career.htm"
-
 
 def extract_and_parse_datetime(text):
     import re
@@ -67,11 +65,12 @@ def fetch_career_games():
     # Gather info about all current career games in the Wold
     import requests
     import re
+    from objects import wold_url
 
     result = []
 
     # Send a GET request to the website
-    response = requests.get(WOLD_URL)
+    response = requests.get(wold_url)
 
     # Check if the request was successful (status code 200)
     if response.status_code == 200:
@@ -163,14 +162,15 @@ def clean_posts(posts):
         clean_post = post.get('raw_post')
         # Remove leading and trailing white space
         clean_post = clean_post.strip()
-        # Replace <big> tag with a div of class "post_header"
-        clean_post = clean_post.replace('<big>', '<div class=\"post_header\">')
-        clean_post = clean_post.replace('</big>', '</div class=\"post_header\">')
-        clean_post = clean_post.replace('<div class=\"post_header\"><b>', '<div class=\"post_header\">')
-        clean_post = clean_post.replace('</b></div class=\"post_header\">', '</div class=\"post_header\">')
-        # Replace formatting around post datetiem with a div of class "post_datetime"
-        clean_post = clean_post.replace('<font size=\"-1\"><br>', '<div class=\"post_datetime\">')
-        clean_post = clean_post.replace('</font><br>', '</div class=\"post_datetime\">')
+        # Replace <big> tag with a span of class "post_header"
+        clean_post = clean_post.replace('<big>', '<span class=\"post-header\">')
+        clean_post = clean_post.replace('</big>', '</span class=\"post-header\">')
+        clean_post = clean_post.replace('<span class=\"post-header\"><b>', '<span class=\"post-header\">')
+        clean_post = clean_post.replace('</b></span class=\"post-header\">', '</span class=\"post-header\">')
+        # Replace formatting around post datetime with a span of class "post_datetime"
+
+        clean_post = clean_post.replace('<font size=\"-1\"><br>', '<span class=\"post-datetime\">')
+        clean_post = clean_post.replace('</font><br>', '</span class=\"post-datetime\">')
         # Replace &nbsp; characters
         clean_post = clean_post.replace('&nbsp;', '')
         # Remove the trailing div of class "hrThin"
@@ -178,81 +178,60 @@ def clean_posts(posts):
         # Replace single and double quote characters
         clean_post = replace_smart_quotes(clean_post)
 
-        '''
-        # Mark quotes with a div of class "dialog"
-        clean_post = clean_post.replace('<b>\"', '<div class=\"dialog\">\"')
-        clean_post = clean_post.replace('\"</b>', '\"</div class=\"dialog\">')
-
-        #! Discover if there are dialog divs left open and attempt to close them.
-        # Count all number of open dialog divs
-        open_diag_count = clean_post.count('<div class=\"dialog\">\"')
-        # Count all number of close dialog divs
-        close_diag_count = clean_post.count('\"</div class=\"dialog\">')
-        # If the number of close divs are lower than the open divs...
-        if close_diag_count < open_diag_count:
-            # Split up the string based on open divs...
-            split_post = clean_post.split('<div class=\"dialog\">\"')
-            # Starting with element [1], look for close divs
-            for fragment in split_post:
-                if '</div class=\"dialog\">' not in fragment:
-                    # If a close div is missing, look for a [/b] tag and add it afterwards
-                    if '[/b]' in fragment:
-                        fragment = fragment.replace('[/b]','[/b]</div class=\"dialog\">')
-                    # If a close div is missing, look for a " and add it afterwards
-                    elif '"' in fragment:
-                        fragment = fragment.replace('"','\"</div class=\"dialog\">')
-                    # If neither of those is present and it is the last element, add the close div at the end of the string
-                    else:
-                        fragment = fragment + '</div class=\"dialog\">'
-            clean_post = '<div class=\"dialog\">\"'.join(map(str, split_post))
-
-        #! Discover if there are dialog divs closed but not opened and open them.
-        # If the number of open divs are lower than the close divs...
-        if close_diag_count > open_diag_count:
-            # Split up the string based on close divs...
-            split_post = clean_post.split('\"</div class=\"dialog\">')
-            # Starting with element [1], look for open divs
-            for fragment in split_post:
-                if '<div class=\"dialog\">' not in fragment:
-                    # If an open div is missing, look for a [b] tag and add it before
-                    if '[b]' in fragment:
-                        fragment = fragment.replace('[b]','<div class=\"dialog\">[b]')
-                    # If an open div is missing, look for a " and add it before
-                    elif '"' in fragment:
-                        fragment = fragment.replace('"','<div class=\"dialog\">\"')
-                    # If neither of those is present and it is the last element, add the open div at the beginning of the string
-                    else:
-                        fragment = fragment + '<div class=\"dialog\">'
-            clean_post = '\"</div class=\"dialog\">'.join(map(str, split_post))
-        '''
-
         # Remove trailing line break
         if clean_post.endswith('<br>'):
             clean_post = clean_post[:-4]
-        # Wrap post contents (non-header) in div of class "post_contents"
-        clean_post = clean_post.replace('</div class=\"post_datetime\">\n','</div class=\"post_datetime\"><div class=\"post_contents\">')
-        clean_post = clean_post + '</div class=\"post_contents\">'
+        # Wrap post contents (non-header) in div of class "post-contents"
+        clean_post = clean_post.replace('</span class=\"post-datetime\">\n','</span class=\"post-datetime\"><div class=\"post-contents\">')
+        clean_post = clean_post + '</div class=\"post-contents\">'
+
+        # Wrap post contents (header) in div of "post-clean-header"
+        clean_post_header = clean_post.split('<div class=\"post-contents\">')[0]
+        if '; <br>' in clean_post_header:
+            clean_post_header = clean_post_header.replace('; <br>','<span class=\"post-datetime\">')
+        if '<font size=\"-1\">' in clean_post_header:
+            clean_post_header = clean_post_header.replace('<font size=\"-1\">','<span class=\"dice-rolls\">')
+            clean_post_header = clean_post_header.replace('<span class=\"post-datetime\">','</span class=\"dice-rolls\"><span class=\"post-datetime\">')
+        clean_post_header = clean_post_header.replace('<br>','')
+        clean_post_header = '<div class=\"post-clean-header\">' + clean_post_header + '</div class=\"post-clean-header\">'
 
         # Apply changes
         post['clean_post'] = clean_post
-        post['clean_post_contents'] = '<div class=\"post_contents\">' + clean_post.split('<div class=\"post_contents\">')[1]
+        post['clean_post_header'] = clean_post_header
+        post['clean_post_contents'] = '<div class=\"post-contents\">' + clean_post.split('<div class=\"post-contents\">')[1]
 
     return posts
 
 
 def extract_dice_rolls(roll_string):
-    import re
     # Regular expression pattern to match dice rolls
-    pattern = r'(\d*d\d+([+-]\d+)?=\d+|\d*d\d+([+-]\d+)?)'
+    import re
+
+    #pattern = r'(\d*d\d+([+-]\d+)?=\d+|\d*d\d+([+-]\d+)?)'
+    pattern = r'\d*d\d+(?:[+-]\d+)?=\d+\s*;'
     
     # Find all matches using re.findall()
     matches = re.findall(pattern, roll_string)
+
     rolls = []
     for match in matches:
-        if str(match[0]).startswith('d'):
-            rolls.append('1' + str(match[0]))
+        match = match.replace(';','').strip()
+        if str(match).startswith('d'):
+            # Give natural 20s a special class
+            if str(match).startswith('d20'):
+                modifier, result_value = str(match).split('=')
+                modifier = modifier.replace('d20','').replace('+','')
+                if modifier == '':
+                    modifier = '0'
+                if 20 + int(modifier) == int(result_value):
+                    rolls.append('<span class=\"nat-20\">1' + str(match) + '</span>')
+            else:
+                rolls.append('1' + str(match))
         else:
-            rolls.append(str(match[0]))
+            rolls.append(str(match))
+        rolls.append(str(match))
+    #if rolls == ['1d']:
+    #    rolls = []
 
     # Return the matched rolls
     return rolls
@@ -304,6 +283,7 @@ def extract_conditions(text):
 
 
 def extract_links(html):
+    # Extracts urls from a string
     import re
 
     pattern = r'<a\s+[^>]*href=["\'](.*?)["\'][^>]*>(.*?)</a>'
@@ -314,8 +294,9 @@ def extract_links(html):
 
 
 def find_dms(text):
-    import re
     # Searches for DM names and returns them
+    import re
+
     pattern = r'(?:[-–—]\s*)?(DM|GM|CoGM|Co-DM|CoDM)\s+([A-Z][a-zA-Z]*(?:\s+(?:and|&)?\s*[A-Z][a-zA-Z]*)*)\b'
     matches = re.findall(pattern, text)
 
@@ -409,3 +390,130 @@ def upload_file_ftps(host, port, username, password, local_file, remote_path):
 
     except Exception as e:
         print(f"Error: {e}")
+
+
+def build_wold_json_file():
+    import os
+    import colorama
+    from colorama import Fore
+    from datetime import datetime
+
+    colorama.init()
+    # Gather up a list of all current games
+    career_games = fetch_career_games()
+
+    print('Loading Data for Career Games...')
+
+    for game in career_games:
+        game['page_generation_datetime'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        print(f' - {Fore.CYAN}{game.get("game_name")}{Fore.RESET} ({game.get("game_id")})')
+        print(f'    - URL: {Fore.YELLOW}{game.get("game_url")}{Fore.RESET}')
+
+        print('       - Fetching Raw Data...')
+        game['raw_data'] = fetch_career_game_data(game.get('game_url'))
+
+        print('       - Isolating Posts from Raw Data...')
+        game['posts'] = isolate_posts_from_raw_data(game.get('raw_data'))
+        print(f'          - Found {Fore.GREEN}{len(game.get("posts"))}{Fore.RESET} Posts')
+
+        print('       - Cleaning Posts...')
+        game['posts'] = clean_posts(game.get('posts'))
+        print('          - Done')
+
+        print('       - Parsing Post Datetimes...')
+        for post in game.get('posts'):
+            post['post_datetime'] = extract_and_parse_datetime(post.get('raw_post'))
+            game['most_recent_post_datetime'] = post.get('post_datetime')
+        print(f'          - Most Recent Post: {Fore.LIGHTMAGENTA_EX}{game.get("most_recent_post_datetime")}{Fore.RESET}')
+
+        print('       - Parsing Header Info From Posts...')
+        game['posts'] = parse_headers_from_posts(game['posts'])
+        print('          - Done')
+
+        print('       - Parsing Header Post Info...')
+        game['posts'] = parse_header_information(game['posts'])
+
+        # Generate list of characters
+        game['characters'] = {}
+        for post in game.get('posts'):
+            if post.get('character_name'):
+                if post.get('character_name') != 'DM':
+                    if len(post.get('header_urls')) > 0:
+                        game['characters'][post.get('character_name')] = {'name': post.get('character_name'),
+                                                                          'given_name': str(post.get('character_name')).split(' ')[0],
+                                                                          'url': post.get('header_urls')[0].get('url'),
+                                                                          'hp': post.get('hp'),
+                                                                          'ac': post.get('ac'),
+                                                                          'pp': post.get('pp')}
+                    else:
+                        game['characters'][post.get('character_name')] = {'name': post.get('character_name'),
+                                                                          'given_name': str(post.get('character_name')).split(' ')[0],
+                                                                          'url': None,
+                                                                          'hp': post.get('hp'),
+                                                                          'ac': post.get('ac'),
+                                                                          'pp': post.get('pp')}
+        # Sort the characters by name
+        game['characters'] = dict(sorted(game.get('characters').items()))
+
+        # Add custom class for all characters mentioned in the posts
+        for post in game.get('posts'):
+            for character in game.get('characters').values():
+                if character.get('given_name') in post.get('clean_post_contents'):
+                    if len(str(character.get('given_name'))) > 2:
+                        post['clean_post_contents'] = post['clean_post_contents'].replace(character.get('given_name'), f'<span class=\"character-mention\">{character.get("given_name")}</span>')
+
+        # Create URL for the Dark Wold game page
+        game['darkwold_url'] = f'game/{game.get("game_id")}.html'
+
+        # Create the Dark Wold game page file path
+        games_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),'game')
+        game['darkwold_file_path'] = os.path.join(games_dir, f'{game.get("game_id")}.html')
+
+    print('Exporting Data to JSON...')
+    export_data_to_file(career_games)
+    print('Done!')
+
+    colorama.deinit()
+
+
+def create_landing_page(game_links):
+    # Create wold selection landing page
+    import os
+    from jinja2 import Environment, FileSystemLoader
+    
+    # Load the template
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    template_dir = os.path.join(script_dir, 'templates')
+    env = Environment(loader=FileSystemLoader(template_dir))
+    template = env.get_template('landing_page.html')
+
+    # Render the template
+    output_html = template.render(links=game_links)
+
+    # Save the output into file
+    with open(os.path.join(script_dir,'landing_page.html'), 'w', encoding='utf-8') as f:
+        f.write(output_html)
+
+    return None
+
+
+def create_game_page(game):
+    # Create the html for a dark wold game page.
+    import os
+    from jinja2 import Environment, FileSystemLoader
+    
+    # Load the template
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    template_dir = os.path.join(script_dir, 'templates')
+    env = Environment(loader=FileSystemLoader(template_dir))
+    template = env.get_template('game.html')
+
+    # Render the template
+    output_html = template.render(game=game)
+
+    # Save the output into file
+    with open(game.get('darkwold_file_path'), 'w', encoding='utf-8') as f:
+        f.write(output_html)
+
+    return None
