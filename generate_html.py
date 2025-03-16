@@ -25,7 +25,7 @@ def main():
     files = []
     files.append(('landing_page.html', '/darkwold/landing_page.html'))
     for game in games:
-        files.append((game.get('darkwold_file_path'), f'/darkwold/{game.get("game_id")}.html'))
+        files.append((game.get('darkwold_file_path'), f'/darkwold/game/{game.get("game_id")}.html'))
 
     # Load FTP Configuration
     ftp_ini = os.path.join(os.path.dirname(os.path.abspath(__file__)),'ftp_settings.ini')
