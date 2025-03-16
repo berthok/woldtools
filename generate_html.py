@@ -4,6 +4,7 @@ def main():
     from functions import build_wold_json_file
     from functions import create_landing_page, create_game_page
     from functions import upload_file_ftps
+    from generate_emails import generate_emails
 
     # Extract data from the web into a JSON file
     build_wold_json_file()
@@ -23,9 +24,8 @@ def main():
     # Create list of files to upload to FTP (local file, remote file)
     files = []
     files.append(('landing_page.html', '/darkwold/landing_page.html'))
-    files.append(('game_post_preview.html', '/darkwold/game_post_preview.html'))
     for game in games:
-        files.append((game.get('darkwold_file_path'), f'/darkwold/game/{game.get("game_id")}.html'))
+        files.append((game.get('darkwold_file_path'), f'/darkwold/{game.get("game_id")}.html'))
 
     # Load FTP Configuration
     ftp_ini = os.path.join(os.path.dirname(os.path.abspath(__file__)),'ftp_settings.ini')
@@ -44,6 +44,9 @@ def main():
         for input_file, output_file in files:
             print(f'Uploading {input_file} to {output_file}')
             upload_file_ftps(ftp_server, int(ftp_server_port), ftp_user, ftp_password, input_file, output_file)
+
+    # Generate emails
+    generate_emails()
 
 
 if __name__ == '__main__':

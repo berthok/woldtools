@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Verdana, sans-serif;
+            color: rgb(50, 50, 50);
+            background-color: #464646;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #2e2e2e;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .post {
+            padding: 15px;
+            border-bottom: 1px solid #161616;
+        }
+        .post:last-child {
+            border-bottom: none;
+        }
+        .post-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .post-content {
+            margin-top: 10px;
+        }
+        a {
+            color: rgb(125, 164, 212);
+            text-decoration: none;
+        }
+        .post-contents b {
+            color: rgb(188, 121, 121);
+        }
+
+        .post-contents i {
+            color: rgb(97, 139, 164);
+        }
+        .nat-20 {
+            color: rgb(188, 121, 121)
+        }
+
+        .character-mention {
+            color: rgb(228, 186, 94);
+            font-weight: bold;
+            font-style: italic;
+        }
+        .links-to-wold {
+            text-align: center; /* Centers all child elements */
+        }
+
+        .links-to-wold a {
+            text-align: center; /* Centers the text */
+            display: inline-block; /* Makes the link behave like a block element */
+            font-size: 16px; /* Adjust the text size */
+            font-weight: bold;
+            background-color: #2e2e2e; /* Dark background */
+            color: #d1d1d1; /* Light text color */
+            padding: 5px 10px; /* Adds some spacing around the text */
+            border-radius: 4px; /* Rounded corners */
+            text-decoration: none; /* Removes underline */
+            transition: background-color 0.3s ease; /* Smooth hover effect */
+            margin: 0 auto; /* Centers the link horizontally */
+        }
+
+        .links-to-wold a:hover {
+            background-color: #444; /* Slightly lighter on hover */
+        }
+
+        .compact-paragraphs p {
+            margin: 2px 0; /* Reduces top and bottom margin */
+            line-height: 1.2; /* Slightly tighter line spacing */
+        }
+    </style>
+</head>
+<body>
+    <div class="links-to-wold">
+        <a href="{{ game.game_url }}">Go Post in {{ game.game_name }}</a>
+        <br>
+        <a href="https://kevinbertholf.com/wold/darkwold/{{ game.darkwold_url }}">Go View in DarkWold</a>
+    </div>
+    <div class="container">
+        {% for post in game.posts[-10:]|reverse %}
+        <table width="100%" cellpadding="10" cellspacing="0" border="0" style="max-width: 800px; margin: 0 auto; background-color: #1a1a1a; color: rgb(203, 201, 201); font-family: Verdana, sans-serif; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);">
+            <tr>
+                <!-- Profile Image on the Left -->
+                <td width="60" valign="top" style="padding-right: 10px; vertical-align: middle;">
+                    <div style="display: flex; align-items: center; height: 100%;">
+                        <img src="https://kevinbertholf.com/wold/darkwold/game/profiles/{{ game.game_id }}/{{ post.character_name | replace(' ', '%20') }}.png" 
+                            alt="{{ post.character_name }}" 
+                            width="50" height="50" 
+                            style="border-radius: 50%; display: block;">
+                    </div>
+                </td>
+
+                <!-- Character Details & Dice Rolls on the Right -->
+                <td valign="top">
+                    <strong>
+                        {% if post.dm_post == 1 %}
+                            {% if post.dm|length == 1 %}DM - {{ post.dm[0] }}
+                            {% elif post.dm|length > 1 %}DMs - {{ post.dm }}
+                            {% else %}DM Post{% endif %}
+                        {% else %}
+                            {% if post.header_urls|length > 0 %}
+                                <a href="{{ post.header_urls[0].url }}" style="color: rgb(125, 164, 212); text-decoration: none;">
+                                    {{ post.character_name }}
+                                </a>
+                            {% else %}
+                                {{ post.character_name }}
+                            {% endif %} ({{ post.player_name }})
+                        {% endif %}
+                    </strong>
+                    <div class="compact-paragraphs">
+                        {% if post.hp %}
+                            <p><strong>Hit Points:</strong> {{ post.hp[0] }}/{{ post.hp[1] }}{% if post.hp[2] != 0 %} and {{ post.hp[2] }} Temp{% endif %}</p>
+                        {% endif %}
+                        {% if post.ac %}
+                            <p><strong>Armor Class:</strong> {{ post.ac }}</p>
+                        {% endif %}
+                        {% if post.pp %}
+                            <p><strong>Passive Perception:</strong> {{ post.pp }}</p>
+                        {% endif %}
+                        {% if post.conditions %}
+                            <p><strong>Conditions:</strong> {{ post.conditions }}</p>
+                        {% endif %}
+                        {% if post.dice_rolls %}
+                            <p><strong>Dice Rolls:</strong> {{ post.dice_rolls }}</p>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border-top: 2px solid #444; padding-top: 10px;">
+                    <p>{{ post.clean_post_contents }}</p>
+                </td>
+            </tr>
+        </table>
+        <br>
+        {% endfor %}
+    </div>
+</body>
+</html>
