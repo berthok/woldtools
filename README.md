@@ -12,3 +12,6 @@ When you post in the Wold you aren't given any way to preview your formatting ch
 This program will download career game data from all active games in the Wold. It will format them into a json structure and output the data to your filesystem. Then it will build several websites in html using jinja and the json data.
 * landing_pages.html
 * game/game_id.html
+
+## generate_emails.py
+This program will analyze the career game data and look for new posts. If it finds any, it will send emails to recipients. It formats the email using jinja and json data.
