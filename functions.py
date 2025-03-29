@@ -191,7 +191,7 @@ def clean_posts(posts):
             clean_post_header = clean_post_header.replace('; <br>','<span class=\"post-datetime\">')
         if '<font size=\"-1\">' in clean_post_header:
             clean_post_header = clean_post_header.replace('<font size=\"-1\">','<span class=\"dice-rolls\">')
-            clean_post_header = clean_post_header.replace('<span class=\"post-datetime\">','</span class=\"dice-rolls\"><span class=\"post-datetime\">')
+            clean_post_header = clean_post_header.replace('<span class=\"post-datetime\">',';</span class=\"dice-rolls\"><span class=\"post-datetime\">')
         clean_post_header = clean_post_header.replace('<br>','')
         clean_post_header = '<div class=\"post-clean-header\">' + clean_post_header + '</div class=\"post-clean-header\">'
 
@@ -225,11 +225,11 @@ def extract_dice_rolls(roll_string):
                     modifier = '0'
                 if 20 + int(modifier) == int(result_value):
                     rolls.append('<span class=\"nat-20\">1' + str(match) + '</span>')
+                else:
+                    rolls.append('1' + str(match))
             else:
                 rolls.append('1' + str(match))
-        else:
-            rolls.append(str(match))
-        rolls.append(str(match))
+        #rolls.append(str(match))
     #if rolls == ['1d']:
     #    rolls = []
 
@@ -318,6 +318,8 @@ def parse_header_information(posts):
     # AC 14 67/67 Sakura Kanuzaki; Julio A. (example of problem header)
     for post in posts:
         header = post.get('raw_header')
+        # print('Parsing header:')
+        # print(header)
 
         # Detect if post is by a GM
         post['dm_post'] = 0
@@ -349,19 +351,19 @@ def parse_header_information(posts):
             post['character_name'] = replace_smart_quotes(post.get('character_name'))
 
         # Extract Armor Class
-        post['ac'] = extract_ac(post.get('raw_header'))
+        post['ac'] = extract_ac(header)
 
         # Extract Hit Points
-        post['hp'] = extract_hp(post.get('raw_header'))
+        post['hp'] = extract_hp(header)
 
         # Extract Passive Perception
-        post['pp'] = extract_passive_perception(post.get('raw_header'))
+        post['pp'] = extract_passive_perception(header)
 
         # Extract Conditions
-        post['conditions'] = extract_conditions(post.get('raw_header'))
+        post['conditions'] = extract_conditions(header)
 
         # Extract Dice Rolls
-        post['dice_rolls'] = extract_dice_rolls(post.get('clean_post').split('</div class=\"post_datetime\">')[0])
+        post['dice_rolls'] = extract_dice_rolls(post.get('clean_post_header'))
 
     return posts
 
