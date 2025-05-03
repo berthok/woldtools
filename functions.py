@@ -465,6 +465,10 @@ def build_wold_json_file():
                     if len(str(character.get('given_name'))) > 2:
                         post['clean_post_contents'] = post['clean_post_contents'].replace(character.get('given_name'), f'<span class=\"character-mention\">{character.get("given_name")}</span>')
 
+        # Add dice roll statistics to the game
+        game = build_dice_roll_statistics(game)
+
+
         # Create URL for the Dark Wold game page
         game['darkwold_url'] = f'game/{game.get("game_id")}.html'
 
@@ -477,6 +481,68 @@ def build_wold_json_file():
     print('Done!')
 
     colorama.deinit()
+
+
+def build_dice_roll_statistics(game):
+    import os
+    import colorama
+    from colorama import Fore
+    from datetime import datetime
+
+    game['dice_rolls'] = []
+    game['dice_roll_statistics'] = {}
+
+    for character in game.get('characters').values():
+        character['dice_rolls'] = []
+        character['dice_roll_statistics'] ={}
+
+    colorama.init()
+    
+    for post in game.get('posts'):
+        post_date = post.get('post_datetime').isoformat()
+        if len(post.get('dice_rolls')) > 0:
+            for dice_roll in post.get('dice_rolls'):
+                if '1d20' in dice_roll:
+                    roll = dice_roll.replace('<span class=\"nat-20\">','').replace('</span>','').replace('1d20','')
+                    if '+' in roll:
+                        mod, total = roll.split('=')
+                        raw_roll = int(total) - int(mod)
+                    elif '-' in roll:
+                        mod, total = roll.split('=')
+                        raw_roll = int(total) - int(mod)
+                    else:
+                        raw_roll = int(roll.replace('=',''))
+                    game['dice_rolls'].append({post_date : raw_roll})
+                    if post.get('character_name') in game.get('characters').keys():
+                        game['characters'][post.get('character_name')]['dice_rolls'].append({post_date : raw_roll})
+
+    game_rolls = game.get('dice_rolls')
+    game_roll_list = []
+    for roll in game_rolls:
+        for r in roll.values():
+            game_roll_list.append(r)
+    if len(game_roll_list) == 0:
+        game['dice_roll_statistics']['average'] = 0
+    else:
+        game['dice_roll_statistics']['average'] = sum(game_roll_list) / len(game_roll_list)
+
+    for character in game.get('characters').values():
+        character_rolls = character.get('dice_rolls')
+        character_roll_list = []
+        for roll in character_rolls:
+            for r in roll.values():
+                character_roll_list.append(r)
+        if len(character_roll_list) == 0:
+            character['dice_roll_statistics']['average'] = 0
+        else:
+            character['dice_roll_statistics']['average'] = sum(character_roll_list) / len(character_roll_list)
+
+    
+
+
+    colorama.deinit()
+    return game
+    
 
 
 def create_landing_page(game_links):
