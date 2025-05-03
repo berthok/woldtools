@@ -276,10 +276,14 @@
             {% for character, details in game.characters.items() %}
                 <li><a href="{{ details.url }}" target="_blank">{{ character }}</a>
                     <div class="char-stats">{% if details.hp %}HP({{ details.hp[0] }}/{{ details.hp[1] }}{% if details.hp[2] != 0 %}/{{ details.hp[2] }}{% endif %}){% endif %}
-                        {% if details.ac %} AC({{ details.ac }}){% endif %}{% if details.pp %} PP({{ details.pp }}){% endif %}
+                        {% if details.ac %} AC({{ details.ac }}){% endif %}{% if details.pp %} PP({{ details.pp }}) Dice Avg({{details.dice_roll_statistics.average}}){% endif %}
                     </div>
                 </li>
             {% endfor %}
+        </ul>
+        <h2>Game Dice Average</h2>
+        <ul>
+            <li>{{game.dice_roll_statistics.average }}</li>
         </ul>
         <h2>Last Update</h2>
         <ul>
