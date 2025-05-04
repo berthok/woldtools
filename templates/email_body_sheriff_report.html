@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DarkWold - Character Activity Summary</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .email-header {
+            border-bottom: 2px solid #444;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .email-title {
+            font-size: 24px;
+            color: #444;
+            margin: 0;
+        }
+        
+        .timestamp {
+            color: #777;
+            font-style: italic;
+            font-size: 14px;
+        }
+        
+        .game-section {
+            margin-bottom: 30px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .game-header {
+            background-color: #f5f5f5;
+            padding: 12px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .game-title {
+            margin: 0;
+            font-size: 20px;
+        }
+        
+        .game-title a {
+            color: #1a73e8;
+            text-decoration: none;
+        }
+        
+        .game-title a:hover {
+            text-decoration: underline;
+        }
+        
+        .character-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed; /* Fixed table layout for consistent column widths */
+        }
+        
+        .character-table th {
+            background-color: #f0f0f0;
+            text-align: left;
+            padding: 10px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .character-table td {
+            padding: 8px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        /* Set specific column widths */
+        .character-table th:nth-child(1),
+        .character-table td:nth-child(1) {
+            width: 70%; /* Character name column takes 70% of the table width */
+        }
+        
+        .character-table th:nth-child(2),
+        .character-table td:nth-child(2) {
+            width: 30%; /* Post count column takes 30% of the table width */
+            text-align: center; /* Center-align the post counts */
+        }
+        
+        .character-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .low-post-count {
+            color: #d32f2f;
+            font-weight: bold;
+        }
+        
+        .summary-footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            margin-top: 10px;
+            background-color: #cbc6c6;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            
+            .character-table th, 
+            .character-table td {
+                padding: 8px 10px;
+            }
+            
+            /* Adjust column widths for mobile */
+            .character-table th:nth-child(1),
+            .character-table td:nth-child(1) {
+                width: 60%;
+            }
+            
+            .character-table th:nth-child(2),
+            .character-table td:nth-child(2) {
+                width: 40%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-header">
+        <h1 class="email-title">DarkWold Character Activity Summary</h1>
+    </div>
+    
+    {% for game in games %}
+    <div class="game-section">
+        <div class="game-header">
+            <h2 class="game-title"><a href="{{ game.game_url }}" target="_blank">{{ game.game_name }}</a></h2>
+        </div>
+        
+        <table class="character-table">
+            <thead>
+                <tr>
+                    <th>Character Name</th>
+                    <th>Total Posts</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for character_name, character in game.characters.items() %}
+                {% set post_count = game.posts|selectattr('character_name', 'equalto', character_name)|list|length %}
+                <tr>
+                    <td>{{ character_name }}</td>
+                    <td class="{% if post_count <= 4 %}low-post-count{% endif %}">
+                        {{ post_count }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endfor %}
+    
+    <div class="summary-footer">
+        <p>This is an automated summary of character activity. Characters with fewer than 5 posts are highlighted in red.</p>
+        <p>For more detailed information, including post content and confirmation tracking, please visit the full Sheriff Report:</p>
+        <a href="https://kevinbertholf.com/wold/darkwold/sheriff_reports/{{ report_file_name }}" class="cta-button">View Full Sheriff Report</a>
+    </div>
+</body>
+</html>

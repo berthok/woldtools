@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DarkWold - Sheriff Report</title>
+    <script>
+        // Initialize post tracking when the document loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePostTracking();
+            calculateOverallProgress();
+            
+            // Add event listeners for toggling sections - modified to work with multiple games
+            const toggleCharSummaryBtns = document.querySelectorAll('.toggle-char-summary');
+            toggleCharSummaryBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Find the closest game section and then find the character summary section within it
+                    const gameSection = this.closest('.game-section');
+                    const summarySection = gameSection.querySelector('.character-summary-section');
+                    toggleSection(summarySection, this);
+                });
+            });
+            
+            const toggleCharPostsBtns = document.querySelectorAll('.toggle-char-posts');
+            toggleCharPostsBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Find the closest game section and then find the character posts section within it
+                    const gameSection = this.closest('.game-section');
+                    const postsSection = gameSection.querySelector('.character-posts-section');
+                    toggleSection(postsSection, this);
+                });
+            });
+        });
+
+        function calculateOverallProgress() {
+            const gameSections = document.querySelectorAll('.game-section');
+            
+            gameSections.forEach(gameSection => {
+                const characterRows = gameSection.querySelectorAll('tr[data-character]');
+                let totalCharacters = characterRows.length;
+                let completeCharacters = 0;
+                let totalConfirmed = 0;
+                let totalRequired = totalCharacters * 5; // 5 posts per character
+                
+                characterRows.forEach(row => {
+                    const confirmedCount = parseInt(row.querySelector('.confirmed-count').textContent);
+                    // A character has 100% participation if they have 5 or more confirmed posts
+                    if (confirmedCount >= 5) {
+                        completeCharacters++;
+                    }
+                    totalConfirmed += confirmedCount;
+                });
+                
+                // Update the game header with participation info
+                const gameStatus = gameSection.querySelector('.game-status');
+                const gameProgressBar = gameSection.querySelector('.game-progress-bar-fill');
+                
+                if (gameStatus && gameProgressBar) {
+                    const participationPercentage = Math.round((completeCharacters / totalCharacters) * 100);
+                    const overallPercentage = Math.round((totalConfirmed / totalRequired) * 100);
+                    
+                    gameStatus.textContent = `${completeCharacters}/${totalCharacters} characters at 100% participation (${totalConfirmed}/${totalRequired} confirmed posts)`;
+                    gameProgressBar.style.width = `${overallPercentage}%`;
+                    
+                    // Update color based on overall participation
+                    if (participationPercentage === 100) {
+                        gameStatus.classList.add('full-participation');
+                        gameProgressBar.style.backgroundColor = "#55aa55";
+                    } else if (participationPercentage >= 75) {
+                        gameProgressBar.style.backgroundColor = "#88aa44";
+                    } else if (participationPercentage >= 50) {
+                        gameProgressBar.style.backgroundColor = "#ffaa33";
+                    } else {
+                        gameProgressBar.style.backgroundColor = "#ff5555";
+                    }
+                }
+            });
+        }
+
+        // Modified toggleSection to work with direct element references rather than IDs
+        function toggleSection(sectionElement, toggleBtn) {
+            if (sectionElement.style.display === 'none') {
+                sectionElement.style.display = 'block';
+                if (toggleBtn) {
+                    if (toggleBtn.classList.contains('toggle-char-summary')) {
+                        toggleBtn.textContent = '▼ Hide Character Summary';
+                    } else if (toggleBtn.classList.contains('toggle-char-posts')) {
+                        toggleBtn.textContent = '▼ Hide Character Posts';
+                    }
+                }
+            } else {
+                sectionElement.style.display = 'none';
+                if (toggleBtn) {
+                    if (toggleBtn.classList.contains('toggle-char-summary')) {
+                        toggleBtn.textContent = '► Show Character Summary';
+                    } else if (toggleBtn.classList.contains('toggle-char-posts')) {
+                        toggleBtn.textContent = '► Show Character Posts';
+                    }
+                }
+            }
+        }
+
+        function initializePostTracking() {
+            // Create a tracking object for character post counts
+            window.confirmedPosts = {};
+            
+            // Initialize counts to zero for each character
+            const characterSections = document.querySelectorAll('.character-section');
+            characterSections.forEach(section => {
+                const characterName = section.querySelector('.character-name').textContent;
+                window.confirmedPosts[characterName] = 0;
+            });
+            
+            // Add event listeners for all checkboxes
+            const checkboxes = document.querySelectorAll('.post-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    updateConfirmedCount(this);
+                });
+            });
+        }
+
+        function updateConfirmedCount(checkbox) {
+            const postItem = checkbox.closest('.post-item');
+            const characterSection = checkbox.closest('.character-section');
+            const characterName = characterSection.querySelector('.character-name').textContent;
+            const gameSection = characterSection.closest('.game-section');
+            
+            // Update the count based on checkbox state
+            if (checkbox.checked) {
+                window.confirmedPosts[characterName]++;
+            } else {
+                window.confirmedPosts[characterName]--;
+            }
+            
+            // Update the display in the table - modified to find the row within the current game section
+            const tableRow = gameSection.querySelector(`tr[data-character="${characterName}"]`);
+            if (tableRow) {
+                const confirmedCell = tableRow.querySelector('.confirmed-count');
+                confirmedCell.textContent = window.confirmedPosts[characterName];
+                
+                // Calculate progress - Modified to consider 5 posts as 100%
+                const maxPosts = 5; // 5 posts is considered 100%
+                const percentage = Math.min(100, Math.round((window.confirmedPosts[characterName] / maxPosts) * 100));
+                
+                // Update progress bar
+                const progressBar = tableRow.querySelector('.progress-bar-fill');
+                progressBar.style.width = `${percentage}%`;
+                
+                // Update progress text
+                const progressText = tableRow.querySelector('.progress-text');
+                if (progressText) {
+                    progressText.textContent = `${percentage}%`;
+                }
+                
+                // Update color based on progress
+                if (percentage < 50) {
+                    progressBar.style.backgroundColor = "#ff5555";
+                } else if (percentage < 80) {
+                    progressBar.style.backgroundColor = "#ffaa33";
+                } else {
+                    progressBar.style.backgroundColor = "#55aa55";
+                }
+            }
+            
+            // Mark post as confirmed visually
+            if (checkbox.checked) {
+                postItem.classList.add('confirmed-post');
+            } else {
+                postItem.classList.remove('confirmed-post');
+            }
+            
+            // Update the character section confirmed count display
+            const sectionConfirmedCount = characterSection.querySelector('.confirmed-count');
+            if (sectionConfirmedCount) {
+                sectionConfirmedCount.textContent = window.confirmedPosts[characterName];
+            }
+            
+            // Update progress indicator in character section
+            const sectionProgressBar = characterSection.querySelector('.section-progress-bar-fill');
+            if (sectionProgressBar) {
+                const maxPosts = 5; // 5 posts is considered 100%
+                const sectionPercentage = Math.min(100, Math.round((window.confirmedPosts[characterName] / maxPosts) * 100));
+                sectionProgressBar.style.width = `${sectionPercentage}%`;
+                
+                if (sectionPercentage < 50) {
+                    sectionProgressBar.style.backgroundColor = "#ff5555";
+                } else if (sectionPercentage < 80) {
+                    sectionProgressBar.style.backgroundColor = "#ffaa33";
+                } else {
+                    sectionProgressBar.style.backgroundColor = "#55aa55";
+                }
+            }
+            
+            // Recalculate overall game progress whenever a post is confirmed/unconfirmed
+            calculateOverallProgress();
+        }
+
+        function toggleContent(button) {
+            const parentLi = button.closest('.post-item');
+            const shortContent = parentLi.querySelector('.short-content');
+            const fullContent = parentLi.querySelector('.full-content');
+            
+            if (shortContent.style.display === 'none') {
+                shortContent.style.display = '';
+                fullContent.style.display = 'none';
+                button.textContent = 'Show more';
+            } else {
+                shortContent.style.display = 'none';
+                fullContent.style.display = '';
+                button.textContent = 'Show less';
+            }
+        }
+
+        function toggleCharacter(button, characterId) {
+            const characterPosts = document.getElementById(characterId);
+            if (characterPosts.style.display === 'none') {
+                characterPosts.style.display = 'block';
+                button.textContent = '▼';
+                button.title = 'Collapse posts';
+            } else {
+                characterPosts.style.display = 'none';
+                button.textContent = '►';
+                button.title = 'Expand posts';
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .game-section {
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .game-title {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .game-info {
+            flex-grow: 1;
+            margin-right: 20px;
+        }
+
+        .game-header a {
+            color: #7d9fe6;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .game-header a:hover {
+            color: #a0c0ff;
+            text-decoration: underline;
+        }
+
+        .timestamp {
+            color: #888;
+            font-style: italic;
+            font-size: 14px;
+            margin-top: 5px;
+            display: block;
+        }
+
+        .game-status-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            min-width: 250px;
+        }
+
+        .game-status {
+            font-size: 14px;
+            margin-bottom: 8px;
+            transition: color 0.3s;
+        }
+
+        .full-participation {
+            color: #55aa55;
+            font-weight: bold;
+        }
+
+        .game-progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #333;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .game-progress-bar-fill {
+            height: 100%;
+            width: 0;
+            background-color: #555;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .section-toggle-btn {
+            background-color: #333;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+
+        .section-toggle-btn:hover {
+            background-color: #444;
+        }
+
+        .character-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+        }
+
+        .character-table th {
+            background-color: #333;
+            color: #fff;
+            text-align: left;
+            padding: 10px;
+        }
+
+        .character-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #444;
+        }
+
+        .character-table tr:nth-child(even) {
+            background-color: #252525;
+        }
+
+        .character-table tr:hover {
+            background-color: #303030;
+        }
+
+        .character-section {
+            margin-bottom: 20px;
+            background-color: #252525;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .character-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #333;
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+
+        .character-header:hover {
+            background-color: #444;
+        }
+
+        .character-name {
+            font-weight: bold;
+            font-size: 18px;
+            color: #e0e0e0;
+        }
+
+        .post-count {
+            background-color: #505050;
+            border-radius: 12px;
+            padding: 3px 10px;
+            font-size: 14px;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: #ccc;
+            font-size: 18px;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .toggle-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .character-posts {
+            padding: 0;
+            margin: 0;
+            list-style-type: none;
+        }
+
+        .post-item {
+            padding: 15px;
+            border-bottom: 1px solid #333;
+            position: relative;
+        }
+
+        .post-item:last-child {
+            border-bottom: none;
+        }
+
+        .post-meta {
+            display: flex;
+            justify-content: flex-start;
+            gap: 20px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #999;
+        }
+
+        .post-content-wrapper {
+            position: relative;
+            margin-top: 10px;
+        }
+
+        .full-content {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .content-row {
+            display: flex;
+            align-items: flex-start;
+            margin-top: 8px;
+        }
+
+        .toggle-content {
+            background-color: #555;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-right: 12px;
+            flex-shrink: 0;
+            height: fit-content;
+            margin-top: 5px; /* Align with first line of text */
+        }
+
+        .short-content {
+            display: inline;
+            padding: 0;
+            background-color: transparent;
+            flex-grow: 1;
+        }
+
+        .toggle-content:hover {
+            background-color: #666;
+        }
+
+        .character-mention {
+            color: #e6ba5e;
+            font-weight: bold;
+        }
+
+        .nat-20 {
+            color: #bc7979;
+            font-weight: bold;
+        }
+
+        .low-post-count {
+            color: #ff5555 !important;
+            font-weight: bold;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .game-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .game-header h1 {
+                margin-bottom: 10px;
+            }
+            
+            .game-status-container {
+                width: 100%;
+                align-items: flex-start;
+                margin-top: 15px;
+            }
+            
+            .character-table {
+                font-size: 14px;
+            }
+        }
+        
+        /* New styles for confirmed posts feature */
+        .post-checkbox-container {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+        }
+        
+        .post-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .confirmed-post {
+            background-color: rgba(85, 170, 85, 0.15);
+            border-left: 4px solid #55aa55;
+        }
+        
+        .stats-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .progress-bar {
+            width: 100px;
+            height: 12px;
+            background-color: #333;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background-color: #55aa55;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+        
+        .progress-text {
+            font-size: 12px;
+            min-width: 40px;
+            text-align: right;
+        }
+        
+        .confirmed-count-display {
+            display: flex;
+            align-items: center;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        
+        .section-progress-bar {
+            width: 60px;
+            height: 8px;
+            background-color: #444;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-left: 8px;
+        }
+        
+        .section-progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background-color: #55aa55;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+        
+        .five-post-indicator {
+            margin-left: 5px;
+            font-size: 12px;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% for game in games %}
+            <section class="game-section">
+                <div class="game-header">
+                    <div class="game-info">
+                        <h1 class="game-title"><a href='{{ game.game_url }}' target="_blank">{{ game.game_name }}</a></h1>
+                        <span class="timestamp">{{ game.page_generation_datetime }}</span>
+                    </div>
+                    <div class="game-status-container">
+                        <div class="game-status">0/{{ game.characters|length }} characters at 100% participation (0/{{ game.characters|length * 5 }} confirmed posts)</div>
+                        <div class="game-progress-bar">
+                            <div class="game-progress-bar-fill"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section-header">
+                    <h2>Summary</h2>
+                    <button class="section-toggle-btn toggle-char-summary">► Show Character Summary</button>
+                </div>
+                
+                <div class="character-summary-section" style="display: none;">
+                    <table class="character-table">
+                        <thead>
+                            <tr>
+                                <th>Character Name</th>
+                                <th>Total Posts</th>
+                                <th>Confirmed Story Posts</th>
+                                <th>Participation (5 posts = 100%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for character_name, character in game.characters.items() %}
+                            {% set post_count = game.posts|selectattr('character_name', 'equalto', character_name)|list|length %}
+                            <tr data-character="{{ character_name }}">
+                                <td>{{ character_name }}</td>
+                                <td class="post-count {% if post_count <= 4 %}low-post-count{% endif %}">{{ post_count }}</td>
+                                <td class="confirmed-count">0</td>
+                                <td>
+                                    <div class="progress-container">
+                                        <div class="progress-bar">
+                                            <div class="progress-bar-fill"></div>
+                                        </div>
+                                        <span class="progress-text">0%</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="section-header">
+                    <h2>Posts</h2>
+                    <button class="section-toggle-btn toggle-char-posts">► Show Character Posts</button>
+                </div>
+                
+                <div class="character-posts-section" style="display: none;">
+                    {% for character_name, character in game.characters.items() %}
+                    {% set character_posts = game.posts|selectattr('character_name', 'equalto', character_name)|list %}
+                    {% if character_posts|length > 0 %}
+                    {% set char_id = 'char-' ~ character_name|replace(' ', '-')|replace("'", "")|lower ~ '-game-' ~ loop.index0 %}
+                    <div class="character-section">
+                        <div class="character-header" onclick="toggleCharacter(this.querySelector('.toggle-btn'), '{{ char_id }}')">
+                            <div class="character-name">{{ character_name }}</div>
+                            <div class="stats-container">
+                                <div class="post-count {% if character_posts|length <= 4 %}low-post-count{% endif %}">
+                                    {{ character_posts|length }} posts
+                                </div>
+                                <div class="confirmed-count-display">
+                                    <span class="confirmed-count">0</span>/5
+                                    <div class="section-progress-bar">
+                                        <div class="section-progress-bar-fill"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="toggle-btn" title="Expand posts">►</button>
+                        </div>
+                        <ul id="{{ char_id }}" class="character-posts" style="display: none;">
+                            {% for post in character_posts %}
+                            <li class="post-item">
+                                <div class="post-checkbox-container">
+                                    <input type="checkbox" class="post-checkbox" title="Mark as confirmed">
+                                </div>
+                                <div class="post-meta">
+                                    <span>{{ post.post_datetime }}</span>
+                                    <span>Player: {{ post.player_name if post.player_name and post.player_name != "Unknown" else "N/A" }}</span>
+                                </div>
+                                <div class="post-content-wrapper">
+                                    <button class="toggle-content" onclick="toggleContent(this)">Show more</button>
+                                    <div class="short-content">
+                                        {{ post.clean_post_contents|striptags|truncate(100, true, '...') }}
+                                    </div>
+                                    <div class="full-content" style="display: none;">
+                                        {{ post.clean_post_header|safe }}
+                                        {{ post.clean_post_contents|safe }}
+                                    </div>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </section>
+        {% endfor %}
+    </div>
+</body>
+</html>
