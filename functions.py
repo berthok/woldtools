@@ -585,3 +585,34 @@ def create_game_page(game):
         f.write(output_html)
 
     return None
+
+def build_sheriff_report_page(games):
+    # Create the html for a sheriff report page.
+    import os
+    from jinja2 import Environment, FileSystemLoader
+    from datetime import datetime
+
+    # Load the template
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    template_dir = os.path.join(script_dir, 'templates')
+    env = Environment(loader=FileSystemLoader(template_dir))
+    template = env.get_template('sheriff_report.html')
+
+    # Render the template
+    output_html = template.render(games=games)
+
+    # if today is Sunday, save the file as sheriff_report_<today>.html
+    today = datetime.now().strftime('%Y-%m-%d')
+    if datetime.now().weekday() == 6:
+        today = datetime.now().strftime('%Y-%m-%d')
+    else:
+        today = 'snapshot'
+    # Save the output into file
+    # Create the sheriff report directory if it doesn't exist
+    sheriff_report_dir = os.path.join(script_dir, 'sheriff_reports')
+    if not os.path.exists(sheriff_report_dir):
+        os.makedirs(sheriff_report_dir)
+    with open(os.path.join(sheriff_report_dir,f'sheriff_report_{today}.html'), 'w', encoding='utf-8') as f:
+        f.write(output_html)
+
+    return os.path.join(sheriff_report_dir,f'sheriff_report_{today}.html')
