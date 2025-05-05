@@ -224,6 +224,39 @@
                 button.title = 'Expand posts';
             }
         }
+
+        function checkAllPosts(button, characterName) {
+            // Find the character section containing this button
+            const characterSection = button.closest('.character-section');
+            
+            // Find all checkboxes within this character section
+            const checkboxes = characterSection.querySelectorAll('.post-checkbox');
+            
+            // Check if any checkboxes are already checked
+            const anyChecked = Array.from(checkboxes).some(checkbox => checkbox.checked);
+            
+            // If any are already checked, we'll uncheck all (toggle behavior)
+            // Otherwise, we'll check all
+            const newState = !anyChecked;
+            
+            // Update button text based on the new state
+            if (newState) {
+                button.textContent = 'Uncheck All Posts';
+            } else {
+                button.textContent = 'Check All Posts';
+            }
+            
+            // Loop through all checkboxes and update them
+            checkboxes.forEach(checkbox => {
+                // Only update if the state is changing
+                if (checkbox.checked !== newState) {
+                    checkbox.checked = newState;
+                    // Trigger the change event to update the counts and visuals
+                    const event = new Event('change');
+                    checkbox.dispatchEvent(event);
+                }
+            });
+        }
     </script>
     <style>
         body {
@@ -601,6 +634,40 @@
             font-size: 12px;
             color: #aaa;
         }
+
+        .character-controls {
+            padding: 10px 15px;
+            background-color: #2a2a2a;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .check-all-btn {
+            background-color: #444;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .check-all-btn:hover {
+            background-color: #555;
+        }
+
+        .check-all-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Make sure the character posts list still has proper spacing */
+        .character-posts {
+            padding: 0;
+            margin: 0;
+            list-style-type: none;
+        }
     </style>
 </head>
 <body>
@@ -683,6 +750,9 @@
                             <button class="toggle-btn" title="Expand posts">►</button>
                         </div>
                         <ul id="{{ char_id }}" class="character-posts" style="display: none;">
+                            <div class="character-controls">
+                                <button class="check-all-btn" onclick="checkAllPosts(this, '{{ character_name }}')">Check All Posts</button>
+                            </div>
                             {% for post in character_posts %}
                             <li class="post-item">
                                 <div class="post-checkbox-container">
