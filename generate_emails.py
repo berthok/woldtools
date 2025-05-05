@@ -116,6 +116,83 @@ def generate_emails():
     # Write Email Configuration Data
     write_json_config(os.path.join(os.path.dirname(os.path.abspath(__file__)),'email_config.json'), email_configuration)
 
+def generate_sheriff_report_email(report_file_name):
+    # Generate the email for the sheriff report
+    import os
+    from datetime import datetime, timedelta
+    # Load configuration files
+    if os.path.isfile(os.path.join(os.path.dirname(os.path.abspath(__file__)),'email_config.json')):
+        email_configuration = load_json_config(os.path.join(os.path.dirname(os.path.abspath(__file__)),'email_config.json'))
+    else:
+        print('No email_config.json file found. Not able to run this function.')
+        return None
+    if 'sheriff' not in email_configuration:
+        print('No sheriff configuration found. Not able to run this function.')
+        return None
+    
+    # Load game data
+    if os.path.isfile(os.path.join(os.path.dirname(os.path.abspath(__file__)),'wold_career_games.json')):
+        games = load_json_config(os.path.join(os.path.dirname(os.path.abspath(__file__)),'wold_career_games.json'))
+    else:
+        print('No wold_career_games.json file found. Not able to run this function.')
+        return None
+    
+    # Check the last run datetime for the sheriff report. If today is a Monday and the last run date is not today, send the email.
+    if datetime.now().strftime('%A') == 'Monday':
+        if email_configuration['sheriff']['last_email_sent_date'] != datetime.now().strftime('%Y-%m-%d'):
+            # Create recipient list
+            recipient_list = list(set(email_configuration['sheriff']['recipients'] + 
+                                      email_configuration['admin']['recipients']))
+            if recipient_list == []:
+                print(f" - No recipients for sheriff report. Skipping email.")
+            else:
+                # Create email subject
+                subject = f"Wold Sheriff Report - ({datetime.now().strftime('%Y-%m-%d %H:%M:%S')})"
+
+                # Load the template to create the email body
+                from jinja2 import Environment, FileSystemLoader
+                script_dir = os.path.dirname(os.path.abspath(__file__))
+                template_dir = os.path.join(script_dir, 'templates')
+                env = Environment(loader=FileSystemLoader(template_dir))
+                template = env.get_template('email_body_sheriff_report.html')
+
+                # Create email body
+                if 'snapshot' in report_file_name:
+                    yesterday_date = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+                    yesterday_report_file_name = report_file_name.replace('snapshot', yesterday_date)
+                    body = template.render(games=games, report_file_name=yesterday_report_file_name)
+                else:
+                    body = template.render(games=games, report_file_name=report_file_name)
+               
+                # Send an email
+                print(f" - Sending sheriff report email")
+                server_config = email_configuration['server_config']
+
+                # Wait 2 seconds before sending email
+                # Otherwise the smtp server thinks we are spamming
+                import time
+                time.sleep(2)
+                send_email(sender_email=server_config['sender_email'],
+                        sender_password=server_config['sender_password'],
+                        smtp_server=server_config['smtp_server'],
+                        smtp_port=int(server_config['smtp_port']),
+                        recipient_list=recipient_list,
+                        subject=subject,
+                        body=body)
+                
+                # Update last_email_sent_datetime in email_configuration
+                email_configuration['sheriff']['last_email_sent_date'] = datetime.now().strftime('%Y-%m-%d')
+
+                # Write Email Configuration Data
+                write_json_config(os.path.join(os.path.dirname(os.path.abspath(__file__)),'email_config.json'), email_configuration)
+        else:
+            print(f" - Sheriff report email already sent today. Skipping email.")
+    else:
+        print(f"Today is not Monday. Skipping sheriff report email.")
+    
+    
+    email_configuration['sheriff']['last_email_sent_datetime'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
 
 def main():
     generate_emails()

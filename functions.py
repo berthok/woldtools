@@ -598,13 +598,29 @@ def build_sheriff_report_page(games):
     env = Environment(loader=FileSystemLoader(template_dir))
     template = env.get_template('sheriff_report.html')
 
+    # In your Python code before rendering the template:
+    for game in games:
+        for post in game.get('posts'):
+            # Parse the datetime string into a datetime object
+            if isinstance(post.get('post_datetime'), str):
+                dt_obj = datetime.strptime(post.get('post_datetime'), '%Y-%m-%d %H:%M:%S')
+                # Format with day of week
+                post['formatted_datetime'] = dt_obj.strftime('%A, %B %d, %Y at %I:%M %p')
+            else:
+                # Already a datetime object
+                post['formatted_datetime'] = post.post_datetime.strftime('%A, %B %d, %Y at %I:%M %p')
+
     # Render the template
     output_html = template.render(games=games)
 
-    # if today is Sunday, save the file as sheriff_report_<today>.html
+    # if today is Monday, save the file as sheriff_report_<today>.html
     today = datetime.now().strftime('%Y-%m-%d')
-    if datetime.now().weekday() == 6:
-        today = datetime.now().strftime('%Y-%m-%d')
+    if datetime.now().weekday() == 0:  # Monday
+        # Check to see if the file already exists
+        sheriff_report_dir = os.path.join(script_dir, 'sheriff_reports')
+        if os.path.exists(os.path.join(sheriff_report_dir,f'sheriff_report_{today}.html')) == False:
+            # If it does not exist, create it
+            today = datetime.now().strftime('%Y-%m-%d')
     else:
         today = 'snapshot'
     # Save the output into file
