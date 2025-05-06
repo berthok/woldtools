@@ -8,7 +8,7 @@ def generate_sheriff_report():
     with open(json_file, 'r') as file:
         games = json.load(file)
 
-    from functions import build_sheriff_report_page, upload_file_ftps
+    from functions import build_sheriff_report_page, upload_file_ftps, build_sheriff_reports_landing_page
 
     report_file = build_sheriff_report_page(games)
 
@@ -19,6 +19,9 @@ def generate_sheriff_report():
     if not os.path.exists(sheriff_report_dir):
         os.makedirs(sheriff_report_dir)
     files = [(report_file, f'/darkwold/sheriff_reports/{os.path.basename(report_file)}')]
+
+    sheriff_landing_page_report = build_sheriff_reports_landing_page()
+    files.append((sheriff_landing_page_report, '/darkwold/sheriff_reports/index.html'))
 
     # Load FTP Configuration
     ftp_ini = os.path.join(os.path.dirname(os.path.abspath(__file__)),'ftp_settings.ini')

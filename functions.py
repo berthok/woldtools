@@ -590,7 +590,7 @@ def build_sheriff_report_page(games):
     # Create the html for a sheriff report page.
     import os
     from jinja2 import Environment, FileSystemLoader
-    from datetime import datetime
+    from datetime import datetime, timedelta
 
     # Load the template
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -598,6 +598,8 @@ def build_sheriff_report_page(games):
     env = Environment(loader=FileSystemLoader(template_dir))
     template = env.get_template('sheriff_report.html')
 
+    today = datetime.now().strftime('%Y-%m-%d')
+    one_week_ago = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
     # In your Python code before rendering the template:
     for game in games:
         for post in game.get('posts'):
@@ -611,14 +613,16 @@ def build_sheriff_report_page(games):
                 post['formatted_datetime'] = post.post_datetime.strftime('%A, %B %d, %Y at %I:%M %p')
 
     # Render the template
-    output_html = template.render(games=games)
+    output_html = template.render(games=games, one_week_ago=one_week_ago, today=today)
 
     # if today is Monday, save the file as sheriff_report_<today>.html
-    today = datetime.now().strftime('%Y-%m-%d')
     if datetime.now().weekday() == 0:  # Monday
         # Check to see if the file already exists
         sheriff_report_dir = os.path.join(script_dir, 'sheriff_reports')
-        if os.path.exists(os.path.join(sheriff_report_dir,f'sheriff_report_{today}.html')) == False:
+        if os.path.exists(os.path.join(sheriff_report_dir,f'sheriff_report_{today}.html')):
+            print('File already exists')
+            today = 'snapshot'
+        else:
             # If it does not exist, create it
             today = datetime.now().strftime('%Y-%m-%d')
     else:
@@ -632,3 +636,41 @@ def build_sheriff_report_page(games):
         f.write(output_html)
 
     return os.path.join(sheriff_report_dir,f'sheriff_report_{today}.html')
+
+def build_sheriff_reports_landing_page():
+    # Create the html for a sheriff report landing page.
+    import os
+    from jinja2 import Environment, FileSystemLoader
+    sheriff_report_dir_name = 'sheriff_reports'
+
+    # Load the template
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    template_dir = os.path.join(script_dir, 'templates')
+    env = Environment(loader=FileSystemLoader(template_dir))
+    template = env.get_template('sheriff_report_landing_page.html')
+
+    # Get list of files in the sheriff_reports directory
+    sheriff_report_dir = os.path.join(script_dir, sheriff_report_dir_name)
+    files = os.listdir(sheriff_report_dir)
+
+    links = {}
+    for file in files:
+        if file.endswith('.html'):
+            if 'snapshot' in file:
+                links['Current Post Snapshot'] = file
+            else:
+                date_str = file.split('_')[2].split('.')[0]
+                links[f'Post Report for {date_str}'] = file
+            # Get the date from the filename
+            date_str = file.split('_')[2].split('.')[0]
+            
+
+    # Render the template
+    output_html = template.render(links=links)
+
+    # Save the output into file
+    with open(os.path.join(script_dir,'sheriff_report_landing_page.html'), 'w', encoding='utf-8') as f:
+        f.write(output_html)
+
+    return os.path.join(script_dir,'sheriff_report_landing_page.html')
+    
