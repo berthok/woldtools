@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DarkWold - Sheriff Reports</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #e0e0e0;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #333;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 12px;
+            background-color: #252525;
+            border-radius: 4px;
+            overflow: hidden;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        li:hover {
+            background-color: #303030;
+            transform: translateY(-2px);
+        }
+
+        a {
+            display: block;
+            padding: 15px 20px;
+            color: #7d9fe6;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        a:hover {
+            color: #a0c0ff;
+        }
+
+        /* Optional: Add this nice footer */
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #333;
+            color: #888;
+            font-size: 14px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DarkWold - Sheriff Reports</h1>
+        <ul>
+            {% for k, v in links.items() %}
+            <li><a href="{{ v }}">{{ k }}</a></li>
+            {% endfor %}
+        </ul>
+        <div class="footer">
+            Sheriff Reports are updated weekly
+        </div>
+    </div>
+</body>
+</html>
